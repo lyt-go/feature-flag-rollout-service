@@ -4,6 +4,15 @@ import (
 	"featureflag/internal/model"
 )
 
+// cloneChangeLog 复制一条变更记录，确保读取方拿不到存储内部的指针。
+func cloneChangeLog(c *model.ChangeLog) *model.ChangeLog {
+	if c == nil {
+		return nil
+	}
+	cp := *c
+	return &cp
+}
+
 func (s *MemoryStore) CreateChangeLog(c *model.ChangeLog) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -21,7 +30,7 @@ func (s *MemoryStore) GetChangeLog(id string) (*model.ChangeLog, error) {
 	if !ok {
 		return nil, ErrNotFound
 	}
-	return c, nil
+	return cloneChangeLog(c), nil
 }
 
 func (s *MemoryStore) ListChangeLogs() []*model.ChangeLog {
@@ -29,7 +38,7 @@ func (s *MemoryStore) ListChangeLogs() []*model.ChangeLog {
 	defer s.mu.RUnlock()
 	list := make([]*model.ChangeLog, 0, len(s.changeLogs))
 	for _, c := range s.changeLogs {
-		list = append(list, c)
+		list = append(list, cloneChangeLog(c))
 	}
 	return list
 }

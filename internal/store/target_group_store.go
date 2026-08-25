@@ -4,6 +4,15 @@ import (
 	"featureflag/internal/model"
 )
 
+// cloneTargetGroup 复制一条目标分组记录，确保读取方拿不到存储内部的指针。
+func cloneTargetGroup(g *model.TargetGroup) *model.TargetGroup {
+	if g == nil {
+		return nil
+	}
+	cp := *g
+	return &cp
+}
+
 func (s *MemoryStore) CreateTargetGroup(g *model.TargetGroup) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -21,7 +30,7 @@ func (s *MemoryStore) GetTargetGroup(id string) (*model.TargetGroup, error) {
 	if !ok {
 		return nil, ErrNotFound
 	}
-	return g, nil
+	return cloneTargetGroup(g), nil
 }
 
 func (s *MemoryStore) ListTargetGroups() []*model.TargetGroup {
@@ -29,7 +38,7 @@ func (s *MemoryStore) ListTargetGroups() []*model.TargetGroup {
 	defer s.mu.RUnlock()
 	list := make([]*model.TargetGroup, 0, len(s.groups))
 	for _, g := range s.groups {
-		list = append(list, g)
+		list = append(list, cloneTargetGroup(g))
 	}
 	return list
 }

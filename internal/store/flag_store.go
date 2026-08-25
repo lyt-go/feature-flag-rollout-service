@@ -4,6 +4,16 @@ import (
 	"featureflag/internal/model"
 )
 
+// cloneFlag 复制一条开关记录，确保读取方拿不到存储内部的指针。
+// 上层（含灰度预览）若在返回值上改动字段，也不会回写到真实开关。
+func cloneFlag(f *model.Flag) *model.Flag {
+	if f == nil {
+		return nil
+	}
+	cp := *f
+	return &cp
+}
+
 func (s *MemoryStore) CreateFlag(f *model.Flag) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -23,7 +33,7 @@ func (s *MemoryStore) GetFlag(id string) (*model.Flag, error) {
 	if !ok {
 		return nil, ErrNotFound
 	}
-	return f, nil
+	return cloneFlag(f), nil
 }
 
 func (s *MemoryStore) GetFlagByKey(key string) (*model.Flag, error) {
@@ -31,7 +41,7 @@ func (s *MemoryStore) GetFlagByKey(key string) (*model.Flag, error) {
 	defer s.mu.RUnlock()
 	for _, f := range s.flags {
 		if f.Key == key {
-			return f, nil
+			return cloneFlag(f), nil
 		}
 	}
 	return nil, ErrNotFound
@@ -42,7 +52,7 @@ func (s *MemoryStore) ListFlags() []*model.Flag {
 	defer s.mu.RUnlock()
 	list := make([]*model.Flag, 0, len(s.flags))
 	for _, f := range s.flags {
-		list = append(list, f)
+		list = append(list, cloneFlag(f))
 	}
 	return list
 }

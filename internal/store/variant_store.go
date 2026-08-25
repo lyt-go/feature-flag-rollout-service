@@ -4,6 +4,15 @@ import (
 	"featureflag/internal/model"
 )
 
+// cloneVariant 复制一条变体记录，确保读取方拿不到存储内部的指针。
+func cloneVariant(v *model.Variant) *model.Variant {
+	if v == nil {
+		return nil
+	}
+	cp := *v
+	return &cp
+}
+
 func (s *MemoryStore) CreateVariant(v *model.Variant) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -21,7 +30,7 @@ func (s *MemoryStore) GetVariant(id string) (*model.Variant, error) {
 	if !ok {
 		return nil, ErrNotFound
 	}
-	return v, nil
+	return cloneVariant(v), nil
 }
 
 func (s *MemoryStore) ListVariants() []*model.Variant {
@@ -29,7 +38,7 @@ func (s *MemoryStore) ListVariants() []*model.Variant {
 	defer s.mu.RUnlock()
 	list := make([]*model.Variant, 0, len(s.variants))
 	for _, v := range s.variants {
-		list = append(list, v)
+		list = append(list, cloneVariant(v))
 	}
 	return list
 }

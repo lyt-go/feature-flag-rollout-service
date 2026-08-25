@@ -4,6 +4,15 @@ import (
 	"featureflag/internal/model"
 )
 
+// cloneEvaluationRecord 复制一条评估记录，确保读取方拿不到存储内部的指针。
+func cloneEvaluationRecord(e *model.EvaluationRecord) *model.EvaluationRecord {
+	if e == nil {
+		return nil
+	}
+	cp := *e
+	return &cp
+}
+
 func (s *MemoryStore) CreateEvaluationRecord(e *model.EvaluationRecord) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -21,7 +30,7 @@ func (s *MemoryStore) GetEvaluationRecord(id string) (*model.EvaluationRecord, e
 	if !ok {
 		return nil, ErrNotFound
 	}
-	return e, nil
+	return cloneEvaluationRecord(e), nil
 }
 
 func (s *MemoryStore) ListEvaluationRecords() []*model.EvaluationRecord {
@@ -29,7 +38,7 @@ func (s *MemoryStore) ListEvaluationRecords() []*model.EvaluationRecord {
 	defer s.mu.RUnlock()
 	list := make([]*model.EvaluationRecord, 0, len(s.evaluations))
 	for _, e := range s.evaluations {
-		list = append(list, e)
+		list = append(list, cloneEvaluationRecord(e))
 	}
 	return list
 }
