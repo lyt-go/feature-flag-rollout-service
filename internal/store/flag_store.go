@@ -12,7 +12,7 @@ func (s *MemoryStore) CreateFlag(f *model.Flag) error {
 			return ErrConflict
 		}
 	}
-	s.flags[f.ID] = f
+	s.flags[f.ID] = clone(f)
 	return nil
 }
 
@@ -23,7 +23,7 @@ func (s *MemoryStore) GetFlag(id string) (*model.Flag, error) {
 	if !ok {
 		return nil, ErrNotFound
 	}
-	return f, nil
+	return clone(f), nil
 }
 
 func (s *MemoryStore) GetFlagByKey(key string) (*model.Flag, error) {
@@ -31,7 +31,7 @@ func (s *MemoryStore) GetFlagByKey(key string) (*model.Flag, error) {
 	defer s.mu.RUnlock()
 	for _, f := range s.flags {
 		if f.Key == key {
-			return f, nil
+			return clone(f), nil
 		}
 	}
 	return nil, ErrNotFound
@@ -42,7 +42,7 @@ func (s *MemoryStore) ListFlags() []*model.Flag {
 	defer s.mu.RUnlock()
 	list := make([]*model.Flag, 0, len(s.flags))
 	for _, f := range s.flags {
-		list = append(list, f)
+		list = append(list, clone(f))
 	}
 	return list
 }
@@ -58,7 +58,7 @@ func (s *MemoryStore) UpdateFlag(f *model.Flag) error {
 			return ErrConflict
 		}
 	}
-	s.flags[f.ID] = f
+	s.flags[f.ID] = clone(f)
 	return nil
 }
 

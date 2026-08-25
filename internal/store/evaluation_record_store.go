@@ -10,7 +10,7 @@ func (s *MemoryStore) CreateEvaluationRecord(e *model.EvaluationRecord) error {
 	if _, ok := s.evaluations[e.ID]; ok {
 		return ErrConflict
 	}
-	s.evaluations[e.ID] = e
+	s.evaluations[e.ID] = clone(e)
 	return nil
 }
 
@@ -21,7 +21,7 @@ func (s *MemoryStore) GetEvaluationRecord(id string) (*model.EvaluationRecord, e
 	if !ok {
 		return nil, ErrNotFound
 	}
-	return e, nil
+	return clone(e), nil
 }
 
 func (s *MemoryStore) ListEvaluationRecords() []*model.EvaluationRecord {
@@ -29,7 +29,7 @@ func (s *MemoryStore) ListEvaluationRecords() []*model.EvaluationRecord {
 	defer s.mu.RUnlock()
 	list := make([]*model.EvaluationRecord, 0, len(s.evaluations))
 	for _, e := range s.evaluations {
-		list = append(list, e)
+		list = append(list, clone(e))
 	}
 	return list
 }

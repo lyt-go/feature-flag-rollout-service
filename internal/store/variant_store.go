@@ -10,7 +10,7 @@ func (s *MemoryStore) CreateVariant(v *model.Variant) error {
 	if _, ok := s.variants[v.ID]; ok {
 		return ErrConflict
 	}
-	s.variants[v.ID] = v
+	s.variants[v.ID] = clone(v)
 	return nil
 }
 
@@ -21,7 +21,7 @@ func (s *MemoryStore) GetVariant(id string) (*model.Variant, error) {
 	if !ok {
 		return nil, ErrNotFound
 	}
-	return v, nil
+	return clone(v), nil
 }
 
 func (s *MemoryStore) ListVariants() []*model.Variant {
@@ -29,7 +29,7 @@ func (s *MemoryStore) ListVariants() []*model.Variant {
 	defer s.mu.RUnlock()
 	list := make([]*model.Variant, 0, len(s.variants))
 	for _, v := range s.variants {
-		list = append(list, v)
+		list = append(list, clone(v))
 	}
 	return list
 }
@@ -40,7 +40,7 @@ func (s *MemoryStore) UpdateVariant(v *model.Variant) error {
 	if _, ok := s.variants[v.ID]; !ok {
 		return ErrNotFound
 	}
-	s.variants[v.ID] = v
+	s.variants[v.ID] = clone(v)
 	return nil
 }
 

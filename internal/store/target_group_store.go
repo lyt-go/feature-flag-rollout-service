@@ -10,7 +10,7 @@ func (s *MemoryStore) CreateTargetGroup(g *model.TargetGroup) error {
 	if _, ok := s.groups[g.ID]; ok {
 		return ErrConflict
 	}
-	s.groups[g.ID] = g
+	s.groups[g.ID] = clone(g)
 	return nil
 }
 
@@ -21,7 +21,7 @@ func (s *MemoryStore) GetTargetGroup(id string) (*model.TargetGroup, error) {
 	if !ok {
 		return nil, ErrNotFound
 	}
-	return g, nil
+	return clone(g), nil
 }
 
 func (s *MemoryStore) ListTargetGroups() []*model.TargetGroup {
@@ -29,7 +29,7 @@ func (s *MemoryStore) ListTargetGroups() []*model.TargetGroup {
 	defer s.mu.RUnlock()
 	list := make([]*model.TargetGroup, 0, len(s.groups))
 	for _, g := range s.groups {
-		list = append(list, g)
+		list = append(list, clone(g))
 	}
 	return list
 }
@@ -40,7 +40,7 @@ func (s *MemoryStore) UpdateTargetGroup(g *model.TargetGroup) error {
 	if _, ok := s.groups[g.ID]; !ok {
 		return ErrNotFound
 	}
-	s.groups[g.ID] = g
+	s.groups[g.ID] = clone(g)
 	return nil
 }
 

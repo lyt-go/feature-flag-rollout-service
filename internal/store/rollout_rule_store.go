@@ -10,7 +10,7 @@ func (s *MemoryStore) CreateRolloutRule(r *model.RolloutRule) error {
 	if _, ok := s.rules[r.ID]; ok {
 		return ErrConflict
 	}
-	s.rules[r.ID] = r
+	s.rules[r.ID] = clone(r)
 	return nil
 }
 
@@ -21,7 +21,7 @@ func (s *MemoryStore) GetRolloutRule(id string) (*model.RolloutRule, error) {
 	if !ok {
 		return nil, ErrNotFound
 	}
-	return r, nil
+	return clone(r), nil
 }
 
 func (s *MemoryStore) ListRolloutRules() []*model.RolloutRule {
@@ -29,7 +29,7 @@ func (s *MemoryStore) ListRolloutRules() []*model.RolloutRule {
 	defer s.mu.RUnlock()
 	list := make([]*model.RolloutRule, 0, len(s.rules))
 	for _, r := range s.rules {
-		list = append(list, r)
+		list = append(list, clone(r))
 	}
 	return list
 }
@@ -40,7 +40,7 @@ func (s *MemoryStore) UpdateRolloutRule(r *model.RolloutRule) error {
 	if _, ok := s.rules[r.ID]; !ok {
 		return ErrNotFound
 	}
-	s.rules[r.ID] = r
+	s.rules[r.ID] = clone(r)
 	return nil
 }
 
