@@ -1,10 +1,12 @@
 package service
 
 import (
+	"fmt"
 	"sort"
 	"time"
 
 	"featureflag/internal/model"
+	"featureflag/internal/store"
 	"featureflag/pkg/idgen"
 )
 
@@ -72,11 +74,31 @@ func (s *Service) UpdateTargetGroup(id string, input model.TargetGroup) (*model.
 	return existing, nil
 }
 
-// DeleteTargetGroup 删除目标分组。
+// DeleteTargetGroup 删除目标分组。若仍有灰度规则引用该分组，则拒绝删除以保持引用完整性。
 func (s *Service) DeleteTargetGroup(id string) error {
+	// 确保分组存在，不存在的分组直接返回 NotFound。
+	if _, err := s.store.GetTargetGroup(id); err != nil {
+		return err
+	}
+	// 检查是否仍有灰度规则引用该分组；存在引用时删除会留下悬挂引用，
+	// 并使评估跳过对应规则，因此返回冲突。
+	if refs := s.countRulesByTargetGroup(id); refs > 0 {
+		return fmt.Errorf("%w: 目标分组仍被 %d 条灰度规则引用", store.ErrConflict, refs)
+	}
 	if err := s.store.DeleteTargetGroup(id); err != nil {
 		return err
 	}
 	s.log.Infof("删除目标分组 %s", id)
 	return nil
+}
+
+// countRulesByTargetGroup 统计引用指定目标分组的灰度规则数量。
+func (s *Service) countRulesByTargetGroup(groupID string) int {
+	count := 0
+	for _, r := range s.store.ListRolloutRules() {
+		if r.TargetGroupID == groupID {
+			count++
+		}
+	}
+	return count
 }
